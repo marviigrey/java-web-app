@@ -1,1 +1,36 @@
+node{
+      def MAVEN_HOME = tool name: 'maven 3.8.2'
+     stage('1Clone'){
+git branch: 'master', credentialsId: 'github-credentials', url: 'https://github.com/marviigrey/java-web-app'
+     }
+     stage('2MavenBuild'){
+      sh "${MAVEN_HOME}/bin/mvn clean package"
+     }
+     stage('3CodeQuality'){
+      sh "${MAVEN_HOME}/bin/mvn sonar:sonar"
+     }
+     stage('4DEPLOYTOTOMCAT'){
+     deploy adapters: [tomcat9(credentialsId: 'new-tom-cred', path: '', url: 'http://44.204.10.28:8080/')], contextPath: null, war: 'target/*war'
+     }
+     stage('5DeployToUAT') {
+      sshagent(['ssh-agent']) { 
+    sh "scp -o StrictHostKeyChecking=no target/*war ec2-user@44.204.10.28:/opt/tomcat9/webapps/uat"
+}
+     }
+     stage('6.Approval') {
+         timeout(time:8, unit:'HOURS'){
+             input message: 'Please approve deployment'
+         }
+   }
+   stage('7.deploy2Prod') {
+        sshagent(['ssh-agent']) { 
+    sh "scp -o StrictHostKeyChecking=no target/*war ec2-user@44.204.10.28:/opt/tomcat9/webapps/prod"
+}
+   }
+   stage('8.emailAlert') {
+       emailext body: '''hello, 
+A reminder on the job.
 
+marvellous .E''', recipientProviders: [developers(), requestor()], subject: 'build status', to: 'marvellousfrederick@gmail.com'
+   }
+ }  
