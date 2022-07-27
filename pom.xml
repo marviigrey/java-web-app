@@ -140,12 +140,7 @@
 					<wtpContextName>maven-web-application</wtpContextName>
 				</configuration>
 			</plugin>
-			<server>
-      <id>nexus</id>
-      <username>admin</username>
-      <password>marviigrey</password>
-    </server>
-
+	
 </plugins>
 	
 
